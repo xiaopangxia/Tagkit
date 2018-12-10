@@ -1,0 +1,171 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>句子标注工具</title>
+    <script src="global_var.js"></script>
+    <style type="text/css">
+        <!--
+        @import "front.css";
+        -->
+    </style>
+</head>
+<body style="align: center;">
+<div style="background-color: black;height: 1000px;">
+    <div style="width: 100%;height: 10%;"></div>
+    <div style="width: 1200px;height: 500px;margin-left: 30%;margin-right: 30%;background-color: lightgray;border-radius: 20px;text-align: center">
+        <div style="width: 100%">
+            <h1>句子标注</h1>
+        </div>
+        <div style="width: 100%;height: 30%">
+            <textarea id="text_2_label" style="width: 80%;height: 100%;font-size: x-large">我是待标注句子</textarea>
+        </div>
+        <div id="button_sea" style="width: 100%;margin-top: 20px">
+            <div style="width: 100%;height: 60px;float: left">
+                <div style="width: 20%;float: left">
+                    <h3>情感极性:</h3>
+                </div>
+                <form style="margin-top: 18px;width: 80%;font-size: x-large;color: blue">
+                    <label><input name="metaphor_polarity" type="radio" value="1" />正面</label>
+                    <label><input name="metaphor_polarity" type="radio" value="2" />中性</label>
+                    <label><input name="metaphor_polarity" type="radio" value="3" />负面</label>
+                </form>
+            </div>
+            <div style="width: 100%;height: 60px;float: left">
+                <div style="width: 20%;float: left">
+                    <h3>句子类型:</h3>
+                </div>
+                <form style="margin-top: 18px;width: 80%;font-size: x-large;color: red">
+                    <label><input name="metaphor_type" type="radio" value="1" />类型1</label>
+                    <label><input name="metaphor_type" type="radio" value="2" />类型2</label>
+                    <label><input name="metaphor_type" type="radio" value="3" />类型3</label>
+                    <label><input name="metaphor_type" type="radio" value="4" />类型4</label>
+                </form>
+            </div>
+            <div style="margin-top: 10px;width: 100%;float: left">
+                <div style="width: 20%;height: 100%;float: left;">
+                    <h3>成分标注:</h3>
+                </div>
+                <div style="width: 80%;height: 100%;margin-top: 10px">
+                    <button id="renMing" class="label_button" onclick="setRenMing()">人名</button>
+                    <button id="diMing" class="label_button" onclick="diMing()">地名</button>
+                    <button id="zhuYu" class="label_button" onclick="zhuYu()">主语</button>
+                    <button id="binYu" class="label_button" onclick="binYu()">宾语</button>
+                </div>
+            </div>
+            <div style="width: 100%;height: 60px;float: left">
+                <button id="start" class="label_button_2" onclick="startLabel()">开始</button>
+                <button id="clear" class="label_button_2" onclick="clearLabel()">清除</button>
+                <button id="next" class="label_button_2" onclick="nextLabel()">下一句</button>
+                <input id="start_sent_id" style="float: right;width: 40px">
+            </div>
+        </div>
+
+    </div>
+</div>
+
+
+
+<script language="JavaScript">
+    function startLabel() {
+        var start_sent_id = document.getElementById('start_sent_id').value;
+        alert(start_sent_id);
+        var url = 'http://'+host_address+':'+port+'?target=start&sent_id='+start_sent_id;
+
+
+        var http_request = new XMLHttpRequest();
+        http_request.open('GET', url, true);
+        http_request.send();
+        http_request.onreadystatechange=function () {
+            if (http_request.readyState === 4 &&http_request.status === 200){
+                var json = http_request.responseText;//获取到json字符串，还需解析
+                var data = JSON.parse(json);
+                sent2label = data.sentence;
+                sent_id = data.sent_id;
+                sent_labeled = sent2label;
+                document.getElementById('text_2_label').value=sent_labeled;
+                document.getElementById('start_sent_id').value=sent_id;
+            }
+        };
+    }
+
+    function clearLabel() {
+        sent_labeled = sent2label;
+        document.getElementById('text_2_label').value=sent_labeled;
+        alert("清空该句标注")
+    }
+
+    function nextLabel() {
+        polatity_list = document.getElementsByName('metaphor_polarity');
+        for(var i=0;i<polatity_list.length;i++){
+            if(polatity_list[i].checked===true){
+                polatity=polatity_list[i].value;
+                break;
+            }
+        }
+
+        type_list = document.getElementsByName('metaphor_type');
+        for(var j=0;j<type_list.length;j++){
+            if(type_list[j].checked===true){
+                type=type_list[j].value;
+                break;
+            }
+        }
+
+        var url = 'http://'+host_address+':'+port+'?target=next&sent_id='+sent_id+'&old_sent='+sent_labeled+'&polarity='+polatity+'&type='+type;
+        var http_request = new XMLHttpRequest();
+        http_request.open('GET', url, true);
+        http_request.send();
+        http_request.onreadystatechange=function () {
+            if (http_request.readyState === 4 && http_request.status === 200){
+                var json = http_request.responseText;//获取到json字符串，还需解析
+                var data = JSON.parse(json);
+                sent2label = data.sentence;
+                sent_id = data.sent_id;
+                sent_labeled = sent2label;
+                document.getElementById('text_2_label').value=sent_labeled;
+                document.getElementById('start_sent_id').value=sent_id;
+            }
+        };
+    }
+
+    function setRenMing() {
+        var text_area = document.getElementById('text_2_label');
+        if (text_area.selectionStart !== text_area.selectionEnd) {
+            var new_text_value = text_area.value.substring(0, text_area.selectionStart) + "<BT>"+text_area.value.substring(text_area.selectionStart, text_area.selectionEnd)+"</BT>"+text_area.value.substring(text_area.selectionEnd)
+            sent_labeled = new_text_value;
+            text_area.value=sent_labeled;
+        }
+    }
+
+    function diMing() {
+        var text_area = document.getElementById('text_2_label');
+        if (text_area.selectionStart !== text_area.selectionEnd) {
+            var new_text_value = text_area.value.substring(0, text_area.selectionStart) + "<YT>"+text_area.value.substring(text_area.selectionStart, text_area.selectionEnd)+"</YT>"+text_area.value.substring(text_area.selectionEnd)
+            sent_labeled = new_text_value;
+            text_area.value=sent_labeled;
+        }
+    }
+
+    function zhuYu() {
+        var text_area = document.getElementById('text_2_label');
+        if (text_area.selectionStart !== text_area.selectionEnd) {
+            var new_text_value = text_area.value.substring(0, text_area.selectionStart) + "<MC>"+text_area.value.substring(text_area.selectionStart, text_area.selectionEnd)+"</MC>"+text_area.value.substring(text_area.selectionEnd)
+            sent_labeled = new_text_value;
+            text_area.value=sent_labeled;
+        }
+    }
+
+    function binYu() {
+        var text_area = document.getElementById('text_2_label');
+        if (text_area.selectionStart !== text_area.selectionEnd) {
+            var new_text_value = text_area.value.substring(0, text_area.selectionStart) + "<DC>"+text_area.value.substring(text_area.selectionStart, text_area.selectionEnd)+"</DC>"+text_area.value.substring(text_area.selectionEnd)
+            sent_labeled = new_text_value;
+            text_area.value=sent_labeled;
+        }
+    }
+
+</script>
+
+</body>
+</html>

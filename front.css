@@ -1,0 +1,19 @@
+.label_button {
+    margin-left: 20px;
+    background: #3498db;
+    width: 100px;
+    padding: 4px 0;
+    border-radius: 3px;
+    color: white;
+    font-size: large;
+}
+
+.label_button_2 {
+    margin-left: 20px;
+    background: darkorange;
+    width: 100px;
+    padding: 4px 0;
+    border-radius: 3px;
+    color: white;
+    font-size: large;
+}
